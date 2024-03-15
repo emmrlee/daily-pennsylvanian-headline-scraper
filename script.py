@@ -39,6 +39,31 @@ def scrape_featured_headlines():
 
     return featured_headlines
 
+def scrape_first_news_headlines():
+    """
+    Scrapes the headlines from The Daily Pennsylvanian news section first page.
+
+    Returns:
+        list: The list of first page news headline texts if found, otherwise an empty list.
+    """
+    req = requests.get("https://www.thedp.com/section/news")
+    loguru.logger.info(f"Request URL: {req.url}")
+    loguru.logger.info(f"Request status code: {req.status_code}")
+
+    first_news_headlines = [] # Initialize an empty list to store the headlines
+
+    if req.ok:
+        soup = bs4.BeautifulSoup(req.text, "html.parser")
+        # Find all the headline headers
+        target_divs = soup.find_all("h3", class_="standard-link")
+        # Grab the links from each headline header
+        for target_div in target_divs:
+            headline_link = target_div.find("a")
+            headline = "" if headline_link is None else headline_link.text
+            first_news_headlines.append(headline)
+            loguru.logger.info(f"Data point: {headline}")
+
+    return first_news_headlines
 
 if __name__ == "__main__":
 
@@ -66,6 +91,11 @@ if __name__ == "__main__":
     except Exception as e:
         loguru.logger.error(f"Failed to scrape featured headlines: {e}")
         featured_headlines = []
+    try:
+        first_news_headlines = scrape_first_news_headlines()
+    except Exception as e:
+        loguru.logger.error(f"Failed to scrape first news headlines: {e}")
+        first_news_headlines = []
 
     # Save data
     if featured_headlines:
@@ -73,6 +103,11 @@ if __name__ == "__main__":
             dem.add_today(featured_headline)
         dem.save()
         loguru.logger.info("Saved daily event monitor")
+    if first_news_headlines:
+        for first_news_headline in first_news_headlines: 
+            dem.add_today(first_news_headline)
+        dem.save()
+        loguru.logger.info("Saved daily events monitor")
 
     def print_tree(directory, ignore_dirs=[".git", "__pycache__"]):
         loguru.logger.info(f"Printing tree of files/dirs at {directory}")
