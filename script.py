@@ -13,23 +13,31 @@ import requests
 import loguru
 
 
-def scrape_data_point():
+def scrape_featured_headlines():
     """
-    Scrapes the main headline from The Daily Pennsylvanian home page.
+    Scrapes the featured headlines from The Daily Pennsylvanian home page.
 
     Returns:
-        str: The headline text if found, otherwise an empty string.
+        list: The list of featured headline texts if found, otherwise an empty list.
     """
     req = requests.get("https://www.thedp.com")
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
 
+    featured_headlines = [] # Initialize an empty list to store the headlines
+
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
-        target_element = soup.find("a", class_="frontpage-link")
-        data_point = "" if target_element is None else target_element.text
-        loguru.logger.info(f"Data point: {data_point}")
-        return data_point
+        # Find all the featured divs
+        target_divs = soup.find_all("div", class_="special-edition")
+        # Grab the links from each featured div
+        for target_div in target_divs:
+            headline_link = target_div.find("a", class_="frontpage-link standard-link")
+            headline = "" if headline_link is None else headline_link.text
+            featured_headlines.append(headline)
+            loguru.logger.info(f"Data point: {headline}")
+
+    return featured_headlines
 
 
 if __name__ == "__main__":
@@ -54,14 +62,15 @@ if __name__ == "__main__":
     # Run scrape
     loguru.logger.info("Starting scrape")
     try:
-        data_point = scrape_data_point()
+        featured_headlines = scrape_featured_headlines()
     except Exception as e:
-        loguru.logger.error(f"Failed to scrape data point: {e}")
-        data_point = None
+        loguru.logger.error(f"Failed to scrape featured headlines: {e}")
+        featured_headlines = []
 
     # Save data
-    if data_point is not None:
-        dem.add_today(data_point)
+    if featured_headlines:
+        for featured_headline in featured_headlines: 
+            dem.add_today(featured_headline)
         dem.save()
         loguru.logger.info("Saved daily event monitor")
 
