@@ -98,16 +98,12 @@ if __name__ == "__main__":
         first_news_headlines = []
 
     # Save data
-    if featured_headlines:
-        for featured_headline in featured_headlines: 
-            dem.add_today(featured_headline)
+    all_headlines = featured_headlines + first_news_headlines
+    for headline in all_headlines:
+        if headline in featured_headlines and headline in first_news_headlines:
+            dem.add_today(headline)
         dem.save()
-        loguru.logger.info("Saved daily event monitor")
-    if first_news_headlines:
-        for first_news_headline in first_news_headlines: 
-            dem.add_today(first_news_headline)
-        dem.save()
-        loguru.logger.info("Saved daily events monitor")
+    loguru.logger.info("Saved daily event monitor")
 
     def print_tree(directory, ignore_dirs=[".git", "__pycache__"]):
         loguru.logger.info(f"Printing tree of files/dirs at {directory}")
